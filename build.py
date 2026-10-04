@@ -344,7 +344,11 @@ def build():
     # 404、sitemap、robots、manifest
     p404 = head(f'找不到這一頁｜{SITE_NAME}', '找不到這一頁', '/404.html', '筆記|404|找不到頁面', 'hub')
     p404 = p404.replace('content="index, follow, max-image-preview:large"', 'content="noindex"')
-    p404 += '<section class="hero"><h1>找不到這一頁</h1><p><a class="btn" href="/">回學習筆記首頁</a></p></section>\n' + FOOT
+    cards = ''.join(card(t, notes[t['id']]) for t in topics)
+    p404 += ('<section class="hero nf"><p class="nf-icon" aria-hidden="true">📖</p><h1>這一頁的筆記找不到了</h1>'
+             '<p class="lead">可能網址打錯，或筆記換了位置。回首頁看看，或從下面挑一個主題繼續逛。</p>'
+             '<p><a class="btn" href="/">回學習筆記首頁</a></p></section>\n'
+             f'{recent}<section><h2>看看其他主題</h2><div class="grid">{cards}</div></section>\n' + FOOT)
     (ROOT / '404.html').write_text(vignette(p404), encoding='utf-8')
     today = datetime.date.today().isoformat()
     sm = ''.join(f'<url><loc>{SITE}{u}</loc><lastmod>{today}</lastmod></url>\n' for u in urls)

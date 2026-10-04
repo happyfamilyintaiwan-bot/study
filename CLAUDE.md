@@ -15,4 +15,4 @@
 
 ## Alison
 
-兩人共用同一個 GitHub 帳號，靠分支區分：Alison 一律在 `alison/<主題>` 分支工作、不直接推 main，收工開 PR。
+兩人共用同一個 GitHub 帳號，靠分支區分：Alison 一律在 `alison/<主題>` 分支工作、不直接推 main，收工開 PR。動到 Zoe 的範圍或共管部分，先停下來提醒。

@@ -16,12 +16,17 @@ GA_ID = 'G-ZQZHTYTRMQ'                  # GA4 評估 ID（全站共用，core §
 ADS_CLIENT = 'ca-pub-2022028565680247'  # AdSense 發布商 ID（全站共用）
 ADS_SLOT = ''   # TODO：study 專屬 AdSense 單元，到 AdSense 後台建立後填入；空白＝不放廣告
 DRIVE = ''      # TODO：study 專屬 Travelpayouts Drive 網址；空白＝不載入
-SPEC = 'core-v1.1/study-v0.1'
+SPEC = 'core-v1.3/study-v0.1'
 SITE_NAME = '編織日和 · 學習筆記'
 VER = datetime.date.today().strftime('%Y%m%d')
 YEAR = datetime.date.today().year
 KINDS = ['公開課', '自學', '上過的課']
+KIND_NOTE = {'公開課': '名校免費公開的課，<br>跟著課程進度學。', '自學': '自己找資源，<br>自己排進度。',
+             '上過的課': '真的報名上過的課，<br>整理重點與心得。', '想學清單': '之後想學，<br>先記下來。'}
 STATUSES = ['進行中', '已完成', '想學']
+COLORS = ['sora', 'peach', 'lavender', 'sakura', 'matcha', 'lemon']
+ARROW = ('<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9m-3.5-4L12 8l-3.5 4" '
+         'stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>')
 SLUG = re.compile(r'^[a-z0-9]+(-[a-z0-9]+)*$')
 E = lambda s: html.escape(str(s), quote=True)
 OUT_DIRS = []   # build 產生的資料夾，重建前先清掉
@@ -147,7 +152,7 @@ def head(title, desc, path, page_title, topic, extra_ld=None):
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
-<meta name="theme-color" content="#e4c995">
+<meta name="theme-color" content="#faf8f3">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="{SITE_NAME}">
 <meta property="og:locale" content="zh_TW">
@@ -160,7 +165,7 @@ def head(title, desc, path, page_title, topic, extra_ld=None):
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/study.css?v={VER}">
 {ads}<script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
 <script>
@@ -191,7 +196,7 @@ def ad_block():
 
 FOOT = f'''</main>
 <footer class="foot"><div class="wrap">
-  <p class="mark">{SITE_NAME}</p>
+  <p class="mark-f">{SITE_NAME}</p>
   <p>上過的課、公開課與自學主題，一邊學一邊整理成筆記。</p>
   <nav><a href="{BLOG}">母站 編織日和</a><a href="https://story.knittinghiyori.com/">故事</a><a href="https://tools.knittinghiyori.com/">小工具</a></nav>
   <p class="kh-legal">本站使用 Cookie 進行流量分析（Google Analytics）與顯示廣告（Google AdSense），部分連結為聯盟連結。<a href="{PRIVACY}">隱私權政策</a></p>
@@ -229,14 +234,19 @@ def write(path, s):
     return p
 
 
-def card(t, notes):
+def card(t, notes, i=0, cta='topic_card'):
+    """主題卡：有筆記連主題頁；還沒有筆記時直接連部落格主力文章（study.md §1）"""
     latest = notes[0] if notes else None
-    cnt = f'{len(notes)} 篇筆記' if notes else '筆記準備中'
-    upd = f'<span>最近：{E(latest["date"])}</span>' if latest else ''
-    return (f'<a class="card" href="/{t["id"]}/" data-cta="topic_card" data-cta-type="study">'
+    if notes or not t.get('blog'):
+        href, ctype, go = f'/{t["id"]}/', 'study', '看全部筆記'
+    else:
+        href, ctype, go = t['blog'], 'article', '讀部落格文章'
+    cnt = f'{len(notes)} 篇筆記・最近 {E(latest["date"])}' if latest else '筆記整理中'
+    return (f'<a class="card t-{t["color"]}" style="--i:{i}" href="{E(href)}" data-cta="{cta}" data-cta-type="{ctype}">'
+            f'<span class="tape" aria-hidden="true"></span><span class="mark" aria-hidden="true">{E(t["mark"])}</span>'
             f'<span class="tags"><span class="tag">{E(t["kind"])}</span><span class="tag st">{E(t["status"])}</span></span>'
             f'<span class="ct">{E(t["name"])}</span><span class="cd">{E(t["desc"])}</span>'
-            f'<span class="meta">{cnt}{upd}</span></a>')
+            f'<span class="meta"><span>{cnt}</span><span class="go">{go}{ARROW}</span></span></a>')
 
 
 def note_li(n, show_topic=None):
@@ -255,6 +265,9 @@ def build():
         if t['id'] in ids: errs.append(f'topics.json：id「{t["id"]}」重複')
         if t['kind'] not in KINDS: errs.append(f'topics.json：{t["id"]} 的 kind 只能是 {"／".join(KINDS)}')
         if t['status'] not in STATUSES: errs.append(f'topics.json：{t["id"]} 的 status 只能是 {"／".join(STATUSES)}')
+        if t.get('color') not in COLORS: errs.append(f'topics.json：{t["id"]} 的 color 只能是 {"／".join(COLORS)}')
+        if not t.get('mark'): errs.append(f'topics.json：{t["id"]} 缺 mark（卡片貼紙字）')
+        if t.get('blog') and not t['blog'].startswith('https://knittinghiyori.com/'): errs.append(f'topics.json：{t["id"]} 的 blog 要是 knittinghiyori.com 的文章網址')
         ids.add(t['id'])
     for d in (ROOT / 'notes').iterdir():
         if d.is_dir() and d.name not in ids:
@@ -309,55 +322,87 @@ def build():
     # 主題頁
     for t in topics:
         path = f'/{t["id"]}/'
-        link = (f'<p><a class="btn" href="{E(t["link"])}" target="_blank" rel="noopener" data-cta="course_link" '
-                f'data-cta-type="other">課程官網</a></p>') if t['link'] else ''
-        lst = ('<ul class="notes">' + ''.join(note_li(n) for n in notes[t['id']]) + '</ul>') if notes[t['id']] \
-            else '<p class="empty">這個主題的筆記還在整理中。</p>'
+        btns = ''
+        if t.get('blog'):
+            btns += (f'<a class="btn" href="{E(t["blog"])}" data-cta="blog_link" data-cta-type="article">'
+                     f'先讀部落格文章{ARROW}</a>')
+        if t['link']:
+            btns += (f'<a class="btn ghost" href="{E(t["link"])}" target="_blank" rel="noopener" data-cta="course_link" '
+                     f'data-cta-type="other">課程官網</a>')
+        btns = f'<p class="btns">{btns}</p>' if btns else ''
+        if notes[t['id']]:
+            lst = '<ul class="notes">' + ''.join(note_li(n) for n in notes[t['id']]) + '</ul>'
+        else:
+            more = (f'<br><a href="{E(t["blog"])}" data-cta="blog_link" data-cta-type="article">先讀部落格這篇 →</a>'
+                    if t.get('blog') else '')
+            lst = (f'<div class="empty-note t-{t["color"]}"><p class="sticky"><span class="tape" aria-hidden="true"></span>'
+                   f'這個主題的筆記還在整理中。{more}</p></div>')
         page = head(f'{t["full"]} 學習筆記｜{SITE_NAME}', t['desc'], path, f'筆記|{t["name"]}|主題總覽', t['id'])
-        page += (f'<nav class="crumb"><a href="/">學習筆記</a></nav>\n<section class="hero small">'
+        page += (f'<nav class="crumb"><a href="/">學習筆記</a> › {E(t["name"])}</nav>\n'
+                 f'<section class="topic-hero t-{t["color"]}"><span class="mark" aria-hidden="true">{E(t["mark"])}</span>'
                  f'<p class="tags"><span class="tag">{E(t["kind"])}</span><span class="tag st">{E(t["status"])}</span></p>'
-                 f'<h1>{E(t["full"])}</h1><p class="lead">{E(t["desc"])}</p>{link}</section>\n'
-                 f'<section><h2>全部筆記</h2>{lst}</section>\n')
+                 f'<h1><span class="hl">{E(t["full"])}</span></h1><p class="lead">{E(t["desc"])}</p>{btns}</section>\n'
+                 f'<section class="sec"><div class="sec-h"><h2>全部筆記</h2><span class="sub">{len(notes[t["id"]])} 篇</span></div>{lst}</section>\n')
         page += ad_block() + FOOT
         write(path, page); urls.append(path)
 
     # 首頁
-    groups = ''
-    for k in KINDS:
-        ts = [t for t in topics if t['kind'] == k and t['status'] != '想學']
-        if ts:
-            groups += f'<section><h2>{k}</h2><div class="grid">' + ''.join(card(t, notes[t["id"]]) for t in ts) + '</div></section>\n'
-    wish = [t for t in topics if t['status'] == '想學']
-    if wish:
-        groups += '<section><h2>想學清單</h2><div class="grid">' + ''.join(card(t, notes[t["id"]]) for t in wish) + '</div></section>\n'
-    allnotes = sorted((n for v in notes.values() for n in v), key=lambda n: n['date'], reverse=True)[:6]
+    groups, n, i = '', 0, 0
+    sections = [(k, [t for t in topics if t['kind'] == k and t['status'] != '想學']) for k in KINDS]
+    sections.append(('想學清單', [t for t in topics if t['status'] == '想學']))
+    for k, ts in sections:
+        if not ts:
+            continue
+        n += 1
+        cards = ''
+        for t in ts:
+            cards += card(t, notes[t['id']], i); i += 1
+        groups += (f'<section class="sec split"><div class="sec-h"><span class="no">{n:02d}</span><h2>{k}</h2>'
+                   f'<p class="what">{KIND_NOTE[k]}</p><span class="sub">{len(ts)} 個主題</span></div>'
+                   f'<div class="grid">{cards}</div></section>\n')
+    allnotes = sorted((x for v in notes.values() for x in v), key=lambda x: x['date'], reverse=True)[:6]
     name = {t['id']: t['name'] for t in topics}
-    recent = ('<section><h2>最近更新</h2><ul class="notes">' + ''.join(note_li(n, name[n['topic']]) for n in allnotes)
-              + '</ul></section>\n') if allnotes else ''
+    recent = ('<section class="sec"><div class="sec-h"><span class="no">New</span><h2>最近更新</h2></div><ul class="notes">'
+              + ''.join(note_li(x, name[x['topic']]) for x in allnotes) + '</ul></section>\n') if allnotes else ''
+    total = sum(len(v) for v in notes.values())
+    stats = (f'<ul class="stats"><li><b>{len(topics)}</b>個主題</li><li><b>{len({t["kind"] for t in topics})}</b>種學法</li>'
+             + (f'<li><b>{total}</b>篇筆記</li>' if total else '<li>筆記陸續整理中</li>') + '</ul>')
     desc = '上過的課、公開課與自學的學習筆記：' + '、'.join(t['name'] for t in topics) + '，以及之後想學的新主題。'
     page = head(f'{SITE_NAME}｜課程與自學筆記', desc, '/', '筆記|學習筆記|總覽', 'hub')
-    page += (f'<section class="hero"><h1>學習筆記</h1><p class="lead">把上過的課、看過的公開課和自學的東西，'
-             f'整理成之後自己也找得回來的筆記。</p></section>\n{recent}{groups}')
+    star = ('<svg class="doodle star" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true">'
+            '<path d="M17 3c1 7 3 11 13 14-10 2-12 6-13 14-1-8-4-12-13-14 9-2 12-6 13-14z" stroke="currentColor" stroke-width="1.8" '
+            'stroke-linejoin="round"/></svg>')
+    down = ('<p class="scroll-cue" aria-hidden="true"><svg width="46" height="40" viewBox="0 0 46 40" fill="none">'
+            '<path d="M4 6c14-4 30 0 30 12 0 7-6 10-10 8s-2-9 6-8c6 1 9 8 8 18m0 0l-5-5m5 5l4-6" stroke="currentColor" '
+            'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>往下看看主題</p>')
+    page += ('<section class="hero"><div><p class="eyebrow">Study Notes</p><h1><span class="hl">學習筆記</span>' + star + '</h1>'
+             '<p class="lead"><span class="nb">把上過的課、看過的公開課和自學的東西，</span><span class="nb">整理成之後自己也找得回來的筆記。</span></p>'
+             f'{stats}{down}</div><p class="sticky"><span class="tape" aria-hidden="true"></span>'
+             '<span class="nb">每天學一點點，</span><br><span class="nb">寫下來，</span><br><span class="nb">就不會忘記。</span><span class="sig">Keep learning!</span></p></section>\n'
+             f'{recent}{groups}')
     page += ad_block() + FOOT
     write('/', page)
 
     # 404、sitemap、robots、manifest
     p404 = head(f'找不到這一頁｜{SITE_NAME}', '找不到這一頁', '/404.html', '筆記|404|找不到頁面', 'hub')
     p404 = p404.replace('content="index, follow, max-image-preview:large"', 'content="noindex"')
-    cards = ''.join(card(t, notes[t['id']]) for t in topics)
-    p404 += ('<section class="hero nf"><p class="nf-icon" aria-hidden="true">📖</p><h1>這一頁的筆記找不到了</h1>'
-             '<p class="lead">可能網址打錯，或筆記換了位置。回首頁看看，或從下面挑一個主題繼續逛。</p>'
-             '<p><a class="btn" href="/">回學習筆記首頁</a></p></section>\n'
-             f'{recent}<section><h2>看看其他主題</h2><div class="grid">{cards}</div></section>\n' + FOOT)
+    cards = ''.join(card(t, notes[t['id']], i, 'notfound_topic') for i, t in enumerate(topics))
+    p404 += ('<section class="nf"><p class="nf-digits" aria-hidden="true"><span class="t-sakura">4</span>'
+             '<span class="t-lemon">0</span><span class="t-sora">4</span></p>'
+             '<h1>這一頁好像被撕掉了</h1>'
+             '<p class="lead">可能網址打錯，或筆記換了位置。回首頁看看，或從下面挑一個主題繼續讀。</p>'
+             '<p class="btns"><a class="btn" href="/" data-cta="notfound_hub" data-cta-type="study">回學習筆記首頁</a></p></section>\n'
+             f'{recent}<section class="sec"><div class="sec-h"><h2>看看其他主題</h2><span class="sub">{len(topics)} 個主題</span></div>'
+             f'<div class="grid">{cards}</div></section>\n' + FOOT)
     (ROOT / '404.html').write_text(vignette(p404), encoding='utf-8')
     today = datetime.date.today().isoformat()
     sm = ''.join(f'<url><loc>{SITE}{u}</loc><lastmod>{today}</lastmod></url>\n' for u in urls)
     (ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
                                       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + sm + '</urlset>\n', encoding='utf-8')
-    (ROOT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\nDisallow: /notes/\nDisallow: /_spec-update/\n\nSitemap: {SITE}/sitemap.xml\n', encoding='utf-8')
+    (ROOT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\nDisallow: /notes/\n\nSitemap: {SITE}/sitemap.xml\n', encoding='utf-8')
     (ROOT / 'site.webmanifest').write_text(json.dumps({
         'name': SITE_NAME, 'short_name': '學習筆記', 'lang': 'zh-Hant-TW', 'start_url': '/', 'display': 'standalone',
-        'background_color': '#f2ede4', 'theme_color': '#e4c995',
+        'background_color': '#faf8f3', 'theme_color': '#faf8f3',
         'icons': [{'src': '/icons/icon-192.png', 'sizes': '192x192', 'type': 'image/png'},
                   {'src': '/icons/icon-512.png', 'sizes': '512x512', 'type': 'image/png'}]},
         ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

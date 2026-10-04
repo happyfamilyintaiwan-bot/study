@@ -6,7 +6,7 @@
   3. python3 build.py   → 出現「0 頁有問題」才可以 push
 不需要安裝任何套件（Markdown 轉換是本檔自己寫的簡易版）。
 """
-import datetime, html, json, pathlib, re, shutil, sys
+import datetime, hashlib, html, json, pathlib, re, shutil, sys
 
 ROOT = pathlib.Path(__file__).parent
 SITE = 'https://study.knittinghiyori.com'
@@ -18,7 +18,7 @@ ADS_SLOT = ''   # TODO：study 專屬 AdSense 單元，到 AdSense 後台建立�
 DRIVE = ''      # TODO：study 專屬 Travelpayouts Drive 網址；空白＝不載入
 SPEC = 'core-v1.3/study-v0.2'
 SITE_NAME = '編織日和 · 學習筆記'
-VER = datetime.date.today().strftime('%Y%m%d')
+VER = hashlib.md5((ROOT / 'assets' / 'study.css').read_bytes()).hexdigest()[:8]  # CSS 一改，網址就變，讀者不會卡在舊快取
 YEAR = datetime.date.today().year
 KINDS = ['公開課', '自學', '上過的課']
 KIND_EN = {'公開課': 'Open Course', '自學': 'Self-Study', '上過的課': 'Coursework', '想學清單': 'Wishlist'}

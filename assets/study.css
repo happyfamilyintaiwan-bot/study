@@ -1,0 +1,81 @@
+/* study.knittinghiyori.com：配色沿用編織日和 story 的紙與墨 */
+:root{
+  --paper:#f2ede4; --paper-2:#fbf9f5; --paper-3:#e8e1d5;
+  --ink:#3e3a34; --ink-2:#655f56;
+  --accent:#6b5a33; --tag:#ece3cf; --tag-st:#e0e6da;
+  --rule:rgba(62,58,52,.14); --shadow:0 10px 30px rgba(62,58,52,.09);
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --latin:"Jost","Noto Sans TC",sans-serif;
+  --max:880px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 17px/1.85 var(--sans);overflow-wrap:anywhere}
+a{color:var(--accent)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 16px}
+@media(min-width:700px){.wrap{padding:0 32px}}
+
+.top{border-bottom:1px solid var(--rule);background:var(--paper-2)}
+.top .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:12px}
+.brand{font:600 17px var(--serif);color:var(--ink);text-decoration:none}
+.home{font-size:14px;color:var(--ink-2);text-decoration:none;min-height:44px;display:flex;align-items:center}
+
+h1,h2,h3,h4{font-family:var(--serif);line-height:1.4;font-weight:600}
+h1{font-size:clamp(28px,6vw,40px);margin:.2em 0 .3em}
+h2{font-size:22px;margin:2em 0 .7em;padding-bottom:.3em;border-bottom:1px solid var(--rule)}
+h3{font-size:19px;margin:1.6em 0 .5em}
+.hero{padding:40px 0 8px}.hero.small{padding-top:12px}
+.lead{color:var(--ink-2);font-size:18px;margin:0 0 1em}
+.crumb{font-size:14px;color:var(--ink-2);padding-top:20px}
+.crumb a{color:var(--ink-2)}
+
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:0}
+.tag{display:inline-block;font-size:13px;line-height:1;padding:6px 9px;border-radius:99px;background:var(--tag);color:var(--ink)}
+.tag.st{background:var(--tag-st)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--paper-2);border:1px solid var(--rule);
+  border-radius:14px;text-decoration:none;color:var(--ink);box-shadow:var(--shadow);transition:transform .2s}
+.card:hover{transform:translateY(-2px)}
+.ct{font:600 21px var(--serif)}
+.cd{color:var(--ink-2);font-size:15px;line-height:1.7}
+.meta{margin-top:auto;font-size:13px;color:var(--ink-2);display:flex;justify-content:space-between;gap:8px}
+
+.notes{list-style:none;margin:0;padding:0}
+.notes li{border-bottom:1px solid var(--rule)}
+.notes a{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 0;text-decoration:none;color:var(--ink);min-height:44px}
+.notes .tag{grid-column:1/-1;justify-self:start;margin-bottom:4px}
+.nt{font-weight:500}
+.nd{font:400 14px var(--latin);color:var(--ink-2)}
+.ns{grid-column:1/-1;font-size:14px;color:var(--ink-2)}
+.empty{color:var(--ink-2)}
+
+.btn{display:inline-flex;align-items:center;min-height:44px;padding:0 20px;border-radius:99px;background:var(--ink);color:var(--paper-2);text-decoration:none;font-size:15px}
+
+.note{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;padding:24px 18px;margin:12px 0 24px}
+@media(min-width:700px){.note{padding:40px 48px}}
+.note .date,.note .src{font-size:14px;color:var(--ink-2);margin:0}
+.note .src{margin-top:4px}
+.note img{max-width:100%;height:auto;border-radius:8px}
+.note blockquote{margin:1em 0;padding:4px 16px;border-left:3px solid var(--accent);background:var(--paper);border-radius:0 8px 8px 0}
+.note code{font-size:.9em;background:var(--paper-3);padding:1px 5px;border-radius:4px}
+.note pre{background:#2f2c27;color:#f2ede4;padding:16px;border-radius:10px;overflow-x:auto;font-size:14px;line-height:1.6}
+.note pre code{background:none;padding:0;color:inherit}
+.tbl{overflow-x:auto}
+.note table{border-collapse:collapse;width:100%;font-size:15px}
+.note th,.note td{border:1px solid var(--rule);padding:8px 10px;text-align:left;vertical-align:top}
+.note th{background:var(--paper)}
+.back{margin:0 0 32px}
+
+.kh-ad{width:100%;max-width:728px;margin:150px auto 40px}
+.kh-ad-label{font-size:12px;color:var(--ink-2);margin:0 0 4px}
+.kh-ad ins[data-ad-status="unfilled"]{display:none}
+
+.foot{border-top:1px solid var(--rule);margin-top:48px;padding:32px 0 40px;font-size:14px;color:var(--ink-2)}
+.foot .mark{font:600 16px var(--serif);color:var(--ink);margin:0 0 4px}
+.foot nav{display:flex;flex-wrap:wrap;gap:4px 18px;margin:12px 0}
+.foot nav a{color:var(--ink-2);min-height:44px;display:inline-flex;align-items:center}
+.kh-legal{font-size:13px}
+
+@media(prefers-reduced-motion:reduce){.card{transition:none}.card:hover{transform:none}}

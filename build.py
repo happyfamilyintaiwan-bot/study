@@ -174,7 +174,7 @@ gtag("config","{GA_ID}",/[?]hy_debug=1/.test(location.search)?{{cookie_domain:".
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <a class="brand" href="/">{SITE_NAME}</a>
+  <a class="kh-brand" href="{SITE}/" data-cta="brand_hub" data-cta-type="study"><img src="/icons/logo-knitting-120.webp" width="40" height="40" alt=""><span>編織日和<span class="kh-site">・學習筆記</span></span></a>
   <a class="home" href="{BLOG}">回編織日和</a>
 </div></header>
 <main class="wrap">
@@ -194,7 +194,7 @@ FOOT = f'''</main>
   <p class="mark">{SITE_NAME}</p>
   <p>上過的課、公開課與自學主題，一邊學一邊整理成筆記。</p>
   <nav><a href="{BLOG}">母站 編織日和</a><a href="https://story.knittinghiyori.com/">故事</a><a href="https://tools.knittinghiyori.com/">小工具</a></nav>
-  <p class="kh-legal">本站使用 Cookie 進行流量分析（Google Analytics）與顯示廣告（Google AdSense），部分連結為旅遊聯盟連結。<a href="{PRIVACY}">隱私權政策</a></p>
+  <p class="kh-legal">本站使用 Cookie 進行流量分析（Google Analytics）與顯示廣告（Google AdSense），部分連結為聯盟連結。<a href="{PRIVACY}">隱私權政策</a></p>
   <small>© {YEAR} KNITTING HIYORI</small>
 </div></footer>
 <script>
@@ -233,7 +233,7 @@ def card(t, notes):
     latest = notes[0] if notes else None
     cnt = f'{len(notes)} 篇筆記' if notes else '筆記準備中'
     upd = f'<span>最近：{E(latest["date"])}</span>' if latest else ''
-    return (f'<a class="card" href="/{t["id"]}/" data-cta="topic_card" data-cta-type="article">'
+    return (f'<a class="card" href="/{t["id"]}/" data-cta="topic_card" data-cta-type="study">'
             f'<span class="tags"><span class="tag">{E(t["kind"])}</span><span class="tag st">{E(t["status"])}</span></span>'
             f'<span class="ct">{E(t["name"])}</span><span class="cd">{E(t["desc"])}</span>'
             f'<span class="meta">{cnt}{upd}</span></a>')
@@ -373,6 +373,7 @@ def check(urls):
         if re.search(r'<a (?![^>]*data-google-vignette)', s): miss.append('有連結少了 vignette 標記')
         if 'href="#"' in s: miss.append('有 href="#" 空連結')
         if '/icons/favicon.ico' not in s: miss.append('品牌 icon')
+        if 'data-cta="brand_hub"' not in s or 'logo-knitting-120.webp' not in s: miss.append('頁首品牌列（core §7）')
         for js in re.findall(r'<script>(.*?)</script>', s, re.S):
             if '&' in js: miss.append('追蹤碼出現「和號」字元'); break
         for ld in re.findall(r'<script type="application/ld\+json">(.*?)</script>', s, re.S):

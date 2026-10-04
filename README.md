@@ -1,6 +1,6 @@
 # study.knittinghiyori.com：學習筆記
 
-上過的課、公開課、自學主題的筆記站。負責人：Alison。
+上過的課、公開課、自學主題的筆記站。內容負責人：Alison（在 claude.ai 寫好交給 Zoe）；上架：Zoe 的 Claude Code。
 
 ## 怎麼寫一篇新筆記（3 步）
 
@@ -18,6 +18,9 @@ python3 build.py
 
 - `kind`：公開課／自學／上過的課（首頁照這三區分組）
 - `status`：進行中／已完成／想學（「想學」會放在首頁最下面的想學清單）
+- `blog`：這個主題的部落格主力文章；還沒有筆記時，首頁卡片直接連過去
+- `mark`：卡片角落圓形貼紙上的 1～3 個字（例：`</>`、`あ`）
+- `color`：紙膠帶與貼紙顏色，只用 sora／peach／lavender／sakura／matcha／lemon
 
 ## 檔案在哪
 

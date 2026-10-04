@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /notes/
-Disallow: /_spec-update/
 
 Sitemap: https://study.knittinghiyori.com/sitemap.xml

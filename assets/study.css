@@ -18,7 +18,10 @@ a{color:var(--accent)}
 
 .top{border-bottom:1px solid var(--rule);background:var(--paper-2)}
 .top .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:12px}
-.brand{font:600 17px var(--serif);color:var(--ink);text-decoration:none}
+.kh-brand{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:var(--ink);text-decoration:none;font:700 15px/1.2 var(--sans);letter-spacing:.04em;white-space:nowrap}
+.kh-brand img{width:40px;height:40px;border-radius:8px;flex:none}
+.kh-brand:hover{text-decoration:underline;text-underline-offset:4px}
+@media(max-width:340px){.kh-site{display:none}}
 .home{font-size:14px;color:var(--ink-2);text-decoration:none;min-height:44px;display:flex;align-items:center}
 
 h1,h2,h3,h4{font-family:var(--serif);line-height:1.4;font-weight:600}

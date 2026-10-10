@@ -29,8 +29,9 @@ python3 build.py
 | `notes/<主題>/*.md` | 筆記原稿 | ✅ 寫筆記改這裡 |
 | `topics.json` | 主題清單 | ✅ 加主題改這裡 |
 | `build.py` | 把筆記變成網頁＋上線前檢查 | 很少 |
+| `interactive/<slug>/` | 互動頁的產生器（`content.py` 放文字、`build.py` 產生整頁 HTML） | ✅ 改互動頁文字改這裡的 `content.py` |
 | `assets/study.css` | 版面配色 | 很少 |
-| `index.html`、`<主題>/`、`sitemap.xml`、`404.html` | build 產生的 | ❌ 不要手改，會被蓋掉 |
+| `index.html`、`<主題>/`、`en/`、`sitemap.xml`、`404.html` | build 產生的 | ❌ 不要手改，會被蓋掉 |
 
 ## 還沒做的
 

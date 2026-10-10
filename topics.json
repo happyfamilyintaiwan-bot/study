@@ -1,5 +1,5 @@
 {
-  "_說明": "每個學習主題一筆。id＝網址與 notes/ 底下的資料夾名（英文小寫＋連字號）。kind 只用：公開課／自學／上過的課。status 只用：進行中／已完成／想學。link 沒有就留空字串。 blog＝這個主題的部落格主力文章（還沒有筆記時，首頁卡片直接連這裡）。mark＝卡片角落貼紙上的 1～3 個字。color 只用：sora／peach／lavender／sakura／matcha／lemon。",
+  "_說明": "每個學習主題一筆。id＝網址與 notes/ 底下的資料夾名（英文小寫＋連字號）。kind 只用：公開課／自學／上過的課。status 只用：進行中／已完成／想學。link 沒有就留空字串。 blog＝這個主題的部落格主力文章（還沒有筆記時，首頁卡片直接連這裡）。mark＝卡片角落貼紙上的 1～3 個字。color 只用：sora／peach／lavender／sakura／matcha／lemon。 page＝這個主題的互動頁（選填）：href 網址、title 名稱、label 卡片上的按鈕文字、source 產生器資料夾、langs 其他語言的網址；有 page 時首頁卡片直接連互動頁。",
   "topics": [
     {
       "id": "cs50",
@@ -60,6 +60,27 @@
       "blog": "https://knittinghiyori.com/chess-for-beginners/",
       "mark": "棋",
       "color": "matcha"
+    },
+    {
+      "id": "artists-way",
+      "name": "藝術家之路",
+      "full": "藝術家之路（The Artist's Way）",
+      "kind": "自學",
+      "status": "進行中",
+      "link": "",
+      "desc": "把 The Artist's Way 的晨間隨筆、藝術家約會、獨自散步與 12 週主題做成布置遊戲，每週為工作室搬進一件新東西。",
+      "blog": "",
+      "mark": "藝",
+      "color": "lemon",
+      "page": {
+        "href": "/artists-way/abundant-studio/",
+        "title": "豐盛工作室",
+        "label": "開始 12 週練習",
+        "source": "interactive/abundant-studio",
+        "langs": [
+          "/en/artists-way/abundant-studio/"
+        ]
+      }
     }
   ]
 }

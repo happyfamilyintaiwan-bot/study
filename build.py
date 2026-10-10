@@ -6,7 +6,7 @@
   3. python3 build.py   → 出現「0 頁有問題」才可以 push
 不需要安裝任何套件（Markdown 轉換是本檔自己寫的簡易版）。
 """
-import datetime, hashlib, html, json, pathlib, re, shutil, sys
+import datetime, hashlib, html, json, os, pathlib, re, shutil, subprocess, sys
 
 ROOT = pathlib.Path(__file__).parent
 SITE = 'https://study.knittinghiyori.com'
@@ -16,7 +16,7 @@ GA_ID = 'G-ZQZHTYTRMQ'                  # GA4 評估 ID（全站共用，core §
 ADS_CLIENT = 'ca-pub-2022028565680247'  # AdSense 發布商 ID（全站共用）
 ADS_SLOT = '7499102019'   # study 專屬 AdSense 單元「Study-頁面底部」（core §1）；空白＝不放廣告
 DRIVE = 'https://emrld.ltd/NTgzNjI3.js?t=583627'   # study 專屬 Travelpayouts Drive（core §1）；空白＝不載入
-SPEC = 'core-v1.4/study-v0.3'
+SPEC = 'core-v1.5/study-v0.4'
 SITE_NAME = '編織日和 · 學習筆記'
 OG_IMG = 'og-study.jpg'   # 分享縮圖 1200×630；換圖一律用新檔名，FB／LINE 才會重抓
 VER = hashlib.md5((ROOT / 'assets' / 'study.css').read_bytes()).hexdigest()[:8]  # CSS 一改，網址就變，讀者不會卡在舊快取
@@ -239,19 +239,45 @@ def write(path, s):
 
 
 def card_href(t, notes):
+    if t.get('page'):
+        return t['page']['href']
     return f'/{t["id"]}/' if notes or not t.get('blog') else t['blog']
 
 
 def card_type(t, notes):
-    return 'study' if notes or not t.get('blog') else 'article'
+    return 'study' if t.get('page') or notes or not t.get('blog') else 'article'
+
+
+def build_interactive(t, errs):
+    """互動頁（study.md §1）：執行主題自己的產生器，把整頁 HTML 原樣放進網站，回傳網址清單。
+    站台共用值（spec-version、Drive、AdSense）由這裡帶進去，產生器不用各自維護。"""
+    pg = t['page']
+    src = ROOT / pg['source']
+    env = dict(os.environ, HY_SPEC=SPEC, HY_DRIVE=DRIVE, HY_ADS_CLIENT=ADS_CLIENT, HY_ADS_SLOT=ADS_SLOT)
+    r = subprocess.run([sys.executable, 'build.py'], cwd=src, env=env, capture_output=True, text=True)
+    if r.returncode:
+        errs.append(f'{pg["source"]}/build.py 執行失敗：{(r.stderr or r.stdout).strip()[-300:]}')
+        return []
+    urls = []
+    for f in sorted((src / 'dist').rglob('index.html')):
+        rel = f.relative_to(src / 'dist')
+        out = ROOT / rel
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(vignette(f.read_text(encoding='utf-8')), encoding='utf-8')
+        urls.append('/' + str(rel.parent).strip('/') + '/')
+    for img in src.glob('og*.png'):
+        if img.name != 'og-source.png':
+            shutil.copy2(img, ROOT / pg['href'].strip('/') / img.name)
+    return urls
 
 
 def card(t, notes, i=0, cta='topic_card'):
     """主題卡：有筆記連主題頁；還沒有筆記時直接連部落格主力文章（study.md §1）"""
     latest = notes[0] if notes else None
     href, ctype = card_href(t, notes), card_type(t, notes)
-    go = '看全部筆記' if ctype == 'study' else '讀部落格文章'
-    cnt = f'{len(notes)} 篇筆記・最近 {E(latest["date"])}' if latest else '筆記整理中'
+    go = t['page']['label'] if t.get('page') else ('看全部筆記' if ctype == 'study' else '讀部落格文章')
+    cnt = (f'{len(notes)} 篇筆記・最近 {E(latest["date"])}' if latest
+           else ('互動練習・' + E(t['page']['title']) if t.get('page') else '筆記整理中'))
     return (f'<a class="card t-{t["color"]}" style="--i:{i}" href="{E(href)}" data-cta="{cta}" data-cta-type="{ctype}">'
             f'<span class="idx" aria-hidden="true">{i + 1:02d}</span><span class="mark" aria-hidden="true">{E(t["mark"])}</span>'
             f'<span class="tags"><span class="tag">{E(t["kind"])}</span><span class="tag st">{E(t["status"])}</span></span>'
@@ -286,6 +312,7 @@ def build():
     # 清掉上一次產生的頁面（只清 topics 的資料夾，不碰其他檔案）
     for t in topics:
         shutil.rmtree(ROOT / t['id'], ignore_errors=True)
+    shutil.rmtree(ROOT / 'en', ignore_errors=True)   # 英文頁目前只有互動頁會產生
 
     notes = {t['id']: [] for t in topics}
     for t in topics:
@@ -333,6 +360,9 @@ def build():
     for t in topics:
         path = f'/{t["id"]}/'
         btns = ''
+        if t.get('page'):
+            btns += (f'<a class="btn" href="{E(t["page"]["href"])}" data-cta="page_link" data-cta-type="study">'
+                     f'{E(t["page"]["label"])}：{E(t["page"]["title"])}{ARROW}</a>')
         if t.get('blog'):
             btns += (f'<a class="btn" href="{E(t["blog"])}" data-cta="blog_link" data-cta-type="article">'
                      f'先讀部落格文章{ARROW}</a>')
@@ -354,6 +384,11 @@ def build():
                  f'<section class="sec"><div class="sec-h"><h2>全部筆記</h2><span class="sub">{len(notes[t["id"]])} 篇</span></div>{lst}</section>\n')
         page += ad_block() + FOOT
         write(path, page); urls.append(path)
+
+    # 互動頁（整頁 HTML 原樣放行；放在主題頁之後，主題資料夾才不會被蓋掉）
+    for t in topics:
+        if t.get('page'):
+            urls += build_interactive(t, errs)
 
     # 首頁
     groups, n, i = '', 0, 0
@@ -418,7 +453,7 @@ def build():
     sm = ''.join(f'<url><loc>{SITE}{u}</loc><lastmod>{today}</lastmod></url>\n' for u in urls)
     (ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
                                       '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + sm + '</urlset>\n', encoding='utf-8')
-    (ROOT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\nDisallow: /notes/\n\nSitemap: {SITE}/sitemap.xml\n', encoding='utf-8')
+    (ROOT / 'robots.txt').write_text(f'User-agent: *\nAllow: /\nDisallow: /notes/\nDisallow: /interactive/\n\nSitemap: {SITE}/sitemap.xml\n', encoding='utf-8')
     (ROOT / 'site.webmanifest').write_text(json.dumps({
         'name': SITE_NAME, 'short_name': '學習筆記', 'lang': 'zh-Hant-TW', 'start_url': '/', 'display': 'standalone',
         'background_color': '#f6f5f1', 'theme_color': '#f6f5f1',
@@ -452,7 +487,9 @@ def check(urls):
             if 'rel="canonical"' in s or 'og:image' in s: miss.append('404 不放 canonical、OG（core §7）')
             if 'notfound_hub' not in s or 'notfound_topic' not in s or 'notfound_site' not in s: miss.append('404 追蹤 notfound_hub／topic／site')
             if 'class="adsbygoogle"' in s: miss.append('404 不放廣告單元')
-        elif OG_IMG not in s or not (ROOT / 'icons' / OG_IMG).exists(): miss.append('分享縮圖 og:image（檔案要存在）')
+        else:
+            m = re.search(r'property="og:image" content="' + re.escape(SITE) + r'/([^"]+)"', s)
+            if not m or not (ROOT / m.group(1)).exists(): miss.append('分享縮圖 og:image（檔案要存在）')
         rel = p.relative_to(ROOT)
         print(('✅ ' if not miss else '❌ ') + str(rel) + ('' if not miss else '　缺：' + '、'.join(miss)))
         bad += bool(miss)

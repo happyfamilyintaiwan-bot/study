@@ -4,6 +4,7 @@
 - 筆記原稿只改 `notes/<主題>/*.md`，主題只改 `topics.json`；改完跑 `python3 build.py`，「0 個問題」才能 push。`index.html`、各主題資料夾是產生出來的，不要手改。
 - 筆記內容只整理 Alison 給的材料，不替她編造上課內容或心得。
 - 主題卡：主題還沒有筆記時，直接連 `topics.json` 的 `blog`（部落格主力文章）；有筆記後自動改連主題頁。
+- 互動頁（例：`/artists-way/abundant-studio/`）：原始碼在 `interactive/<slug>/`，改文字改那裡的 `content.py`，不要手改產生出來的 `artists-way/`、`en/`。跑根目錄的 `python3 build.py` 會一起重新產生並檢查；spec-version、Drive、AdSense 由根目錄 `build.py` 帶入。規則見 study.md §1「互動頁」。
 
 ## 每次開工
 

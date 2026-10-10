@@ -14,10 +14,11 @@ BLOG = 'https://knittinghiyori.com/'
 PRIVACY = 'https://knittinghiyori.com/privacy-policy/'
 GA_ID = 'G-ZQZHTYTRMQ'                  # GA4 評估 ID（全站共用，core §1）
 ADS_CLIENT = 'ca-pub-2022028565680247'  # AdSense 發布商 ID（全站共用）
-ADS_SLOT = ''   # TODO：study 專屬 AdSense 單元，到 AdSense 後台建立後填入；空白＝不放廣告
-DRIVE = ''      # TODO：study 專屬 Travelpayouts Drive 網址；空白＝不載入
-SPEC = 'core-v1.3/study-v0.2'
+ADS_SLOT = '7499102019'   # study 專屬 AdSense 單元「Study-頁面底部」（core §1）；空白＝不放廣告
+DRIVE = 'https://emrld.ltd/NTgzNjI3.js?t=583627'   # study 專屬 Travelpayouts Drive（core §1）；空白＝不載入
+SPEC = 'core-v1.4/study-v0.3'
 SITE_NAME = '編織日和 · 學習筆記'
+OG_IMG = 'og-study.jpg'   # 分享縮圖 1200×630；換圖一律用新檔名，FB／LINE 才會重抓
 VER = hashlib.md5((ROOT / 'assets' / 'study.css').read_bytes()).hexdigest()[:8]  # CSS 一改，網址就變，讀者不會卡在舊快取
 YEAR = datetime.date.today().year
 KINDS = ['公開課', '自學', '上過的課']
@@ -131,8 +132,8 @@ def head(title, desc, path, page_title, topic, extra_ld=None):
     url = SITE + path
     drive = ''
     if DRIVE:
-        drive = ('<script data-cfasync="false">(function(){var s=document.createElement("script");'
-                 f's.async=1;s.src="{DRIVE}";document.head.appendChild(s);}})();</script>\n')
+        drive = ('<script data-cfasync="false" data-cmp-ab="2">(function(){var s=document.createElement("script");'
+                 f's.async=1;s.setAttribute("data-cmp-ab","2");s.src="{DRIVE}";document.head.appendChild(s)}})();</script>\n')
     ads = ('<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js" '
            'crossorigin="anonymous"></script>\n') if ADS_SLOT else ''
     ld = [{'@context': 'https://schema.org', '@type': 'WebSite', 'name': SITE_NAME, 'url': SITE + '/'}]
@@ -160,10 +161,12 @@ def head(title, desc, path, page_title, topic, extra_ld=None):
 <meta property="og:title" content="{E(title)}">
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{url}">
-<meta property="og:image" content="{SITE}/icons/og-cover.jpg">
+<meta property="og:image" content="{SITE}/icons/{OG_IMG}">
+<meta property="og:image:alt" content="編織日和・學習筆記：課程、公開課與自學的筆記目次">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{SITE}/icons/{OG_IMG}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap" rel="stylesheet">
@@ -388,15 +391,28 @@ def build():
     write('/', page)
 
     # 404、sitemap、robots、manifest
-    p404 = head(f'找不到這一頁｜{SITE_NAME}', '找不到這一頁', '/404.html', '筆記|404|找不到頁面', 'hub')
+    p404 = head(f'找不到這一頁｜{SITE_NAME}', '找不到這一頁', '/404.html', '筆記|找不到頁面|404', 'hub')
     p404 = p404.replace('content="index, follow, max-image-preview:large"', 'content="noindex"')
+    # core §7：404 不放 canonical、OG；不放廣告單元（Drive 照放）
+    p404 = re.sub(r'<link rel="canonical"[^>]*>\n|<meta (?:property="og:|name="twitter:)[^>]*>\n|<script async src="https://pagead2[^>]*></script>\n', '', p404)
     cards = ''.join(card(t, notes[t['id']], i, 'notfound_topic') for i, t in enumerate(order))
+    sites = [('https://story.knittinghiyori.com/', '故事', 'story'), ('https://poem.knittinghiyori.com/', '詩', 'other'),
+             ('https://games.knittinghiyori.com/', '小遊戲', 'game'), ('https://tools.knittinghiyori.com/', '小工具', 'tool'),
+             (BLOG, '部落格', 'article')]
+    cross = ''.join(f'<a href="{u}" data-cta="notfound_site" data-cta-type="{ty}">{n}</a>' for u, n, ty in sites)
     p404 += ('<section class="nf"><p class="nf-code" aria-hidden="true">4<span>0</span>4</p>'
-             '<span class="label">Page not found</span><h1>找不到這一頁</h1>'
-             '<p class="lead">可能網址打錯，或筆記換了位置。回首頁看看，或從下面挑一個主題繼續讀。</p>'
-             '<p class="btns"><a class="btn" href="/" data-cta="notfound_hub" data-cta-type="study">回學習筆記首頁</a></p></section>\n'
-             f'{recent}<section class="sec"><div class="sec-h"><h2>看看其他主題</h2><span class="sub">{len(topics)} 個主題</span></div>'
-             f'<div class="grid">{cards}</div></section>\n' + FOOT)
+             '<span class="label">Page not found</span><h1 id="nf-h">找不到這一頁</h1>'
+             '<p class="lead" id="nf-p">可能網址打錯，或筆記換了位置。回首頁看看，或從下面挑一個主題繼續讀。</p>'
+             '<p class="btns"><a class="btn" id="nf-b" href="/" data-cta="notfound_hub" data-cta-type="study">回學習筆記首頁</a></p></section>\n'
+             f'{recent}<section class="sec"><div class="sec-h"><h2 id="nf-t">看看其他主題</h2><span class="sub">{len(topics)} 個主題</span></div>'
+             f'<div class="grid">{cards}</div></section>\n'
+             f'<nav class="nf-sites" aria-label="編織日和其他網站"><span id="nf-s">也可以逛逛：</span>{cross}</nav>\n'
+             '<script>\n/* 壞掉的網址含 /en/ 或 /ja/ 時，說明與按鈕換成英文／日文（core §7） */\n'
+             '(function(){try{var p=location.pathname,t=null;\n'
+             'if(p.indexOf("/en/")>-1){t=["Page not found","The address may be mistyped, or the note has moved. Go back to the home page, or pick a topic below.","Back to Study Notes","Browse other topics","More from Knitting Hiyori:"];document.documentElement.lang="en";}\n'
+             'if(p.indexOf("/ja/")>-1){t=["ページが見つかりません","URL が間違っているか、ノートが移動した可能性があります。トップページに戻るか、下のテーマからお選びください。","学習ノートのトップへ","ほかのテーマを見る","編織日和のほかのサイト："];document.documentElement.lang="ja";}\n'
+             'if(t){var ids=["nf-h","nf-p","nf-b","nf-t","nf-s"];for(var i=0;i<ids.length;i++){var e=document.getElementById(ids[i]);if(e){e.textContent=t[i];}}}\n'
+             '}catch(err){}})();\n</script>\n' + FOOT)
     (ROOT / '404.html').write_text(vignette(p404), encoding='utf-8')
     today = datetime.date.today().isoformat()
     sm = ''.join(f'<url><loc>{SITE}{u}</loc><lastmod>{today}</lastmod></url>\n' for u in urls)
@@ -432,6 +448,11 @@ def check(urls):
             try: json.loads(ld)
             except ValueError: miss.append('JSON-LD 解析失敗')
         if DRIVE and not re.search(r'<head>\s*<script', s): miss.append('Drive 不是 head 第一個 script')
+        if p.name == '404.html':
+            if 'rel="canonical"' in s or 'og:image' in s: miss.append('404 不放 canonical、OG（core §7）')
+            if 'notfound_hub' not in s or 'notfound_topic' not in s or 'notfound_site' not in s: miss.append('404 追蹤 notfound_hub／topic／site')
+            if 'class="adsbygoogle"' in s: miss.append('404 不放廣告單元')
+        elif OG_IMG not in s or not (ROOT / 'icons' / OG_IMG).exists(): miss.append('分享縮圖 og:image（檔案要存在）')
         rel = p.relative_to(ROOT)
         print(('✅ ' if not miss else '❌ ') + str(rel) + ('' if not miss else '　缺：' + '、'.join(miss)))
         bad += bool(miss)

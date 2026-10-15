@@ -1,0 +1,25 @@
+# 編織日和 · 學習筆記 study.knittinghiyori.com
+
+> 編織日和（knittinghiyori.com）的學習筆記站：上過的課、公開課與自學的筆記，目前 6 個主題。每個主題在主站都有一篇完整的總整理文章。
+
+- 語言：繁體中文（豐盛工作室另有英文版）
+- 筆記是個人整理與心得，不是課程官方內容
+
+## 主題
+
+- [哈佛 CS50 計算機科學概論](https://study.knittinghiyori.com/cs50/): 公開課，從 Scratch 學到 C、Python、SQL 與網頁。總整理：https://knittinghiyori.com/harvard-cs50-courses/
+- [Claude AI 與 AI 分身](https://study.knittinghiyori.com/claude-ai/): 用 Claude 和 Claude Code 做事的心得、Skill 與提示寫法。總整理：https://knittinghiyori.com/claude-beginner-guide-anthropic-academy-courses/
+- [日文學習](https://study.knittinghiyori.com/japanese/): 文法、單字、聽力與檢定準備。總整理：https://knittinghiyori.com/learn-japanese-self-study-guide/
+- [西洋棋](https://study.knittinghiyori.com/chess/): 開局、殘局、戰術題與對局檢討。總整理：https://knittinghiyori.com/chess-for-beginners/
+- [藝術家之路 The Artist's Way](https://study.knittinghiyori.com/artists-way/): 晨間隨筆、藝術家約會與 12 週主題
+- [Minerva MDA](https://study.knittinghiyori.com/minerva-mda/): Minerva 課程的筆記與整理。總整理：https://knittinghiyori.com/minerva-university-mda-master-degree-guide/
+
+## 互動練習
+
+- [豐盛工作室](https://study.knittinghiyori.com/artists-way/abundant-studio/): The Artist's Way 12 週創造力練習遊戲，寫的內容不上傳（[English](https://study.knittinghiyori.com/en/artists-way/abundant-studio/)）
+
+## 相關網站
+
+- [編織日和](https://knittinghiyori.com/): 主站部落格
+- [編織日和小遊戲](https://games.knittinghiyori.com/): 日文、SQL、SwiftUI 等免費學習小遊戲
+- [如何追蹤編織日和](https://knittinghiyori.com/follow/): RSS 與給 AI 的追蹤指令

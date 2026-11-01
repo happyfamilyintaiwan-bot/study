@@ -562,7 +562,7 @@ details p{margin:8px 0 0;font-size:15px}
   }
 
   function renderWeek() {
-    var n = wk(), w = D.weeks[n - 1], started = !!S, locked = !started || complete();
+    var n = wk(), w = D.weeks[n - 1], started = !!S, locked = complete();
     var band = $('week-band');
     band.style.setProperty('--wk', w.color);
     band.style.setProperty('--wk-on', w.on);
@@ -623,13 +623,16 @@ details p{margin:8px 0 0;font-size:15px}
   }
 
   /* ---------- 互動 ---------- */
+  function begin() {
+    S = fresh(); save();
+    track('studio_start', { level: LVL(1), entry_point: /from=invite/.test(location.search) ? 'shared' : 'direct' });
+  }
+  /* 還沒按「搬進工作室」就先按本週的按鈕：直接從今天開始第 1 週 */
+  function ensure() { if (!S) { begin(); } }
+
   function bind() {
     $('btn-start').addEventListener('click', function () {
-      try {
-        S = fresh(); save();
-        track('studio_start', { level: LVL(1), entry_point: /from=invite/.test(location.search) ? 'shared' : 'direct' });
-        render();
-      } catch (err) {}
+      try { begin(); render(); } catch (err) {}
     });
 
     var ta = $('pages');
@@ -660,26 +663,29 @@ details p{margin:8px 0 0;font-size:15px}
 
     $('btn-draw').addEventListener('click', function () {
       try {
+        ensure();
         var n = wk(), prev = S.card[n], k;
         do { k = Math.floor(Math.random() * D.dates.length); } while (k === prev);
         S.card[n] = k; save(); render();
       } catch (err) {}
     });
     $('btn-date').addEventListener('click', function () {
-      try { var n = wk(); S.dates[n] = ymd(); save(); track('studio_date_done', { level: LVL(n) }); render(); } catch (err) {}
+      try { ensure(); var n = wk(); S.dates[n] = ymd(); save(); track('studio_date_done', { level: LVL(n) }); render(); } catch (err) {}
     });
     $('btn-walk').addEventListener('click', function () {
-      try { var n = wk(); S.walks[n] = ymd(); save(); track('studio_walk_done', { level: LVL(n) }); render(); } catch (err) {}
+      try { ensure(); var n = wk(); S.walks[n] = ymd(); save(); track('studio_walk_done', { level: LVL(n) }); render(); } catch (err) {}
     });
     $('btn-read').addEventListener('click', function () {
-      try { var n = wk(); S.reads[n] = ymd(); save(); render(); } catch (err) {}
+      try { ensure(); var n = wk(); S.reads[n] = ymd(); save(); render(); } catch (err) {}
     });
 
     $('tasks').addEventListener('change', function (ev) {
       try {
+        var was = !!S; ensure();
         var i = +ev.target.getAttribute('data-t'), n = wk();
         var t = S.tasks[n] || [false, false, false, false];
         t[i] = ev.target.checked; S.tasks[n] = t; save();
+        if (!was) { render(); }
       } catch (err) {}
     });
 

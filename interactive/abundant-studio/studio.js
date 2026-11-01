@@ -30,11 +30,11 @@
   var S = null;
   function load() { try { var r = localStorage.getItem(KEY); S = r ? JSON.parse(r) : null; } catch (err) { S = null; } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (err) { /* 無痕模式等 */ } }
-  function fresh() { return { v: 2, start: ymd(), week: 1, weekStart: ymd(), arrived: 0, pages: {}, dates: {}, walks: {}, reads: {}, card: {}, tasks: {} }; }
+  function fresh() { return { v: 2, start: ymd(), week: 1, weekStart: ymd(), arrived: 0, pages: {}, dates: {}, walks: {}, reads: {}, card: {}, own: {}, tasks: {} }; }
   function migrate() {
     if (!S) { return; }
     if (S.arrived === undefined) { S.arrived = S.restored || 0; }
-    S.walks = S.walks || {}; S.reads = S.reads || {};
+    S.walks = S.walks || {}; S.reads = S.reads || {}; S.own = S.own || {};
   }
 
   function streak() {
@@ -155,11 +155,14 @@
     var card = started ? S.card[n] : undefined, hasCard = card === undefined ? false : card !== null;
     var dated = started ? !!S.dates[n] : false;
     $('datecard').classList.toggle('blank', !hasCard);
-    $('datetext').textContent = hasCard ? D.dates[card] : D.dates[(n * 5) % D.dates.length];
+    /* card 為 -1：自己寫的約會，文字存在 S.own（只在這個瀏覽器） */
+    $('datetext').textContent = hasCard ? (card === -1 ? S.own[n] : D.dates[card]) : D.dates[(n * 5) % D.dates.length];
     $('btn-draw').textContent = hasCard ? D.t.btn_redraw : D.t.btn_draw;
     $('btn-draw').disabled = locked || dated;
     $('btn-date').disabled = locked || dated || !hasCard;
     $('date-ok').hidden = !dated;
+    $('date-own').disabled = locked || dated;
+    $('btn-own').disabled = locked || dated || !$('date-own').value.trim();
 
     var walked = started ? !!S.walks[n] : false, read = started ? !!S.reads[n] : false;
     $('btn-walk').disabled = locked || walked; $('walk-ok').hidden = !walked;
@@ -244,6 +247,19 @@
         S.card[n] = k; save(); render();
       } catch (err) {}
     });
+    var own = $('date-own');
+    function useOwn() {
+      try {
+        var txt = own.value.trim();
+        if (!txt) { return; }
+        ensure();
+        var n = wk();
+        S.own[n] = txt; S.card[n] = -1; own.value = ''; save(); render();
+      } catch (err) {}
+    }
+    own.addEventListener('input', function () { $('btn-own').disabled = !own.value.trim(); });
+    own.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { useOwn(); } });
+    $('btn-own').addEventListener('click', useOwn);
     $('btn-date').addEventListener('click', function () {
       try { ensure(); var n = wk(); S.dates[n] = ymd(); save(); track('studio_date_done', { level: LVL(n) }); render(); } catch (err) {}
     });

@@ -148,6 +148,9 @@ h3{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.35;ma
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .btn:not(:disabled):hover{background:var(--blue);border-color:var(--blue);color:#fff}
 .small{font-size:13px;color:var(--muted);margin:12px 0 0}
+.own{display:flex;gap:8px;margin-top:10px}
+.own input{flex:1;min-width:0;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px}
+.own input:focus{outline:2px solid var(--blue);outline-offset:1px}
 .or{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--muted);margin:18px 0 10px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .done-box{border-radius:14px;background:#eef4ec;border:1px solid #cfe0c8;padding:14px 16px;margin-top:4px;font-weight:500}
@@ -377,6 +380,7 @@ gtag('config', '{GA}', /hy_debug=1/.test(location.search) ? {{cookie_domain: '.k
 
     date_body = f"""<div class="datecard blank" id="datecard"><span class="lbl">ARTIST DATE</span><span id="datetext">{e(DATES[lang][6])}</span></div>
       <div class="btns"><button class="btn" id="btn-draw" type="button" disabled>{e(t["btn_draw"])}</button><button class="btn primary" id="btn-date" type="button" disabled>{e(t["btn_date_done"])}</button></div>
+      <div class="own"><input id="date-own" type="text" maxlength="40" autocomplete="off" placeholder="{e(t["own_ph"])}" aria-label="{e(t["own_ph"])}"><button class="btn" id="btn-own" type="button" disabled>{e(t["btn_own"])}</button></div>
       <p class="check-ok" id="date-ok" hidden>{ok_icon}<span>{e(ui["date_ok"])}</span></p>"""
     walk_body = f"""<div class="btns"><button class="btn primary" id="btn-walk" type="button" disabled>{e(t["btn_walk"])}</button></div><p class="check-ok" id="walk-ok" hidden>{ok_icon}<span>{e(ui["walk_ok"])}</span></p>"""
     read_body = f"""<div class="btns"><button class="btn primary" id="btn-read" type="button" disabled>{e(t["btn_read"])}</button></div><p class="check-ok" id="read-ok" hidden>{ok_icon}<span>{e(ui["read_ok"])}</span></p>{read_aff}"""

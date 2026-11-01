@@ -146,6 +146,9 @@ h3{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.35;ma
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .btn:not(:disabled):hover{background:var(--blue);border-color:var(--blue);color:#fff}
 .small{font-size:13px;color:var(--muted);margin:12px 0 0}
+.own{display:flex;gap:8px;margin-top:10px}
+.own input{flex:1;min-width:0;min-height:44px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:16px}
+.own input:focus{outline:2px solid var(--blue);outline-offset:1px}
 .or{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--muted);margin:18px 0 10px}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
 .done-box{border-radius:14px;background:#eef4ec;border:1px solid #cfe0c8;padding:14px 16px;margin-top:4px;font-weight:500}
@@ -378,6 +381,7 @@ details p{margin:8px 0 0;font-size:15px}
   <div class="practices">
     <div class="card"><div class="pc-top"><svg class="pc-ic" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#f6dcd8"/><path d="M10 22 l7-12 l7 12z" fill="#c4542a"/><circle cx="23" cy="11" r="3" fill="#e2a83c"/></svg><h3>Artist Date</h3></div><p class="note">Once a week, set aside 2 to 3 hours and go alone to do something playful, with nothing to produce.</p><div class="datecard blank" id="datecard"><span class="lbl">ARTIST DATE</span><span id="datetext">Spend 15 minutes with one artwork in a museum</span></div>
       <div class="btns"><button class="btn" id="btn-draw" type="button" disabled>Draw a date card</button><button class="btn primary" id="btn-date" type="button" disabled>Date done</button></div>
+      <div class="own"><input id="date-own" type="text" maxlength="40" autocomplete="off" placeholder="Or write your own date" aria-label="Or write your own date"><button class="btn" id="btn-own" type="button" disabled>Use mine</button></div>
       <p class="check-ok" id="date-ok" hidden><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#2f6a2a"/><path d="M4.5 8.2l2.2 2.2 4.6-4.8" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>This week&#x27;s date is done</span></p></div>
     <div class="card"><div class="pc-top"><svg class="pc-ic" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#e2efe0"/><path d="M8 25 q9 -10 18 -2" stroke="#4f7d3a" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="12" cy="13" r="3" fill="#2f7a72"/><circle cx="21" cy="10" r="2" fill="#2f7a72"/></svg><h3>Solo Walk</h3></div><p class="note">At least once a week, walk for 20 minutes or more with no headphones and let your thoughts drift.</p><div class="btns"><button class="btn primary" id="btn-walk" type="button" disabled>Walk done</button></div><p class="check-ok" id="walk-ok" hidden><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#2f6a2a"/><path d="M4.5 8.2l2.2 2.2 4.6-4.8" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>This week&#x27;s walk is done</span></p></div>
     <div class="card"><div class="pc-top"><svg class="pc-ic" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="#e2eaf5"/><path d="M8 11 q5 -2 9 1 v12 q-4 -3 -9 -1z" fill="#1f4e86"/><path d="M26 11 q-5 -2 -9 1 v12 q4 -3 9 -1z" fill="#2e6f9e"/></svg><h3>This Week&#x27;s Chapter</h3></div><p class="note" id="read-d">Read the book&#x27;s chapter for Week 1.</p><div class="btns"><button class="btn primary" id="btn-read" type="button" disabled>Chapter read</button></div><p class="check-ok" id="read-ok" hidden><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#2f6a2a"/><path d="M4.5 8.2l2.2 2.2 4.6-4.8" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>This week&#x27;s chapter is read</span></p></div>
@@ -455,11 +459,11 @@ details p{margin:8px 0 0;font-size:15px}
   var S = null;
   function load() { try { var r = localStorage.getItem(KEY); S = r ? JSON.parse(r) : null; } catch (err) { S = null; } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (err) { /* 無痕模式等 */ } }
-  function fresh() { return { v: 2, start: ymd(), week: 1, weekStart: ymd(), arrived: 0, pages: {}, dates: {}, walks: {}, reads: {}, card: {}, tasks: {} }; }
+  function fresh() { return { v: 2, start: ymd(), week: 1, weekStart: ymd(), arrived: 0, pages: {}, dates: {}, walks: {}, reads: {}, card: {}, own: {}, tasks: {} }; }
   function migrate() {
     if (!S) { return; }
     if (S.arrived === undefined) { S.arrived = S.restored || 0; }
-    S.walks = S.walks || {}; S.reads = S.reads || {};
+    S.walks = S.walks || {}; S.reads = S.reads || {}; S.own = S.own || {};
   }
 
   function streak() {
@@ -580,11 +584,14 @@ details p{margin:8px 0 0;font-size:15px}
     var card = started ? S.card[n] : undefined, hasCard = card === undefined ? false : card !== null;
     var dated = started ? !!S.dates[n] : false;
     $('datecard').classList.toggle('blank', !hasCard);
-    $('datetext').textContent = hasCard ? D.dates[card] : D.dates[(n * 5) % D.dates.length];
+    /* card 為 -1：自己寫的約會，文字存在 S.own（只在這個瀏覽器） */
+    $('datetext').textContent = hasCard ? (card === -1 ? S.own[n] : D.dates[card]) : D.dates[(n * 5) % D.dates.length];
     $('btn-draw').textContent = hasCard ? D.t.btn_redraw : D.t.btn_draw;
     $('btn-draw').disabled = locked || dated;
     $('btn-date').disabled = locked || dated || !hasCard;
     $('date-ok').hidden = !dated;
+    $('date-own').disabled = locked || dated;
+    $('btn-own').disabled = locked || dated || !$('date-own').value.trim();
 
     var walked = started ? !!S.walks[n] : false, read = started ? !!S.reads[n] : false;
     $('btn-walk').disabled = locked || walked; $('walk-ok').hidden = !walked;
@@ -669,6 +676,19 @@ details p{margin:8px 0 0;font-size:15px}
         S.card[n] = k; save(); render();
       } catch (err) {}
     });
+    var own = $('date-own');
+    function useOwn() {
+      try {
+        var txt = own.value.trim();
+        if (!txt) { return; }
+        ensure();
+        var n = wk();
+        S.own[n] = txt; S.card[n] = -1; own.value = ''; save(); render();
+      } catch (err) {}
+    }
+    own.addEventListener('input', function () { $('btn-own').disabled = !own.value.trim(); });
+    own.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { useOwn(); } });
+    $('btn-own').addEventListener('click', useOwn);
     $('btn-date').addEventListener('click', function () {
       try { ensure(); var n = wk(); S.dates[n] = ymd(); save(); track('studio_date_done', { level: LVL(n) }); render(); } catch (err) {}
     });

@@ -195,6 +195,11 @@ h3{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.35;ma
 
 /* 12 件 */
 .items{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.wkpick{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:0 0 14px}
+@media (min-width:860px){.wkpick{grid-template-columns:repeat(12,1fr)}}
+.wkb{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:13px;cursor:pointer}
+.wkb.got{background:var(--c);border-color:var(--c);color:var(--on)}
+.wkb[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:2px}
 .items li{position:relative;border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;background:var(--paper);min-width:0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:start}
 .items .sw{grid-row:span 3;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--serif-lat);font-size:22px}
 .items strong{font-family:var(--display);font-size:17px;line-height:1.35}
@@ -287,6 +292,9 @@ def page(lang, preview=False):
     faq_html = "".join(f'<details data-q="q{k}"><summary>{e(q)}</summary><p>{e(a)}</p></details>'
                        for k, (q, a) in enumerate(FAQ[lang], 1))
     howto = "".join(f"<li>{e(x)}</li>" for x in t["about"])
+    picks = "".join(f'<button class="wkb" type="button" data-w="{k}" aria-pressed="{"true" if k == 1 else "false"}" '
+                    f'style="--c:{w["color"]};--on:{on_color(w["color"])}">W{k:02d}</button>'
+                    for k, w in enumerate(WEEKS, 1))
     nav = t["nav"]
 
     data = {"lang": lang, "pageLang": t["page_lang"], "target": target, "url": URL[lang],
@@ -445,6 +453,7 @@ gtag('config', '{GA}', /hy_debug=1/.test(location.search) ? {{cookie_domain: '.k
 
 <section class="sec" id="week">
   <div class="sec-head"><span class="sec-no">02 / {e(t["week_no"])}</span><h2 id="wk-h2">{e(w0["theme"][lang])}</h2></div>
+  <div class="wkpick" id="wkpick" role="group" aria-label="{e(ui["pick"])}">{picks}</div>
   <div class="week-band" id="week-band">
     <div class="big"><small>WEEK</small><span id="wk-num">01</span></div>
     <div><p class="theme" id="wk-theme" hidden></p><h3 id="wk-item">{e(w0["item"][lang])}</h3><p id="wk-intro">{e(w0["intro"][lang])}</p></div>

@@ -30,11 +30,13 @@
   var S = null;
   function load() { try { var r = localStorage.getItem(KEY); S = r ? JSON.parse(r) : null; } catch (err) { S = null; } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (err) { /* 無痕模式等 */ } }
-  function fresh() { return { v: 2, start: ymd(), week: 1, weekStart: ymd(), arrived: 0, pages: {}, dates: {}, walks: {}, reads: {}, card: {}, own: {}, tasks: {} }; }
+  function fresh() { return { v: 2, start: ymd(), week: 1, weekStart: ymd(), arrived: 0, pages: {}, dates: {}, walks: {}, reads: {}, card: {}, own: {}, tasks: {}, got: {} }; }
   function migrate() {
     if (!S) { return; }
     if (S.arrived === undefined) { S.arrived = S.restored || 0; }
     S.walks = S.walks || {}; S.reads = S.reads || {}; S.own = S.own || {};
+    /* 舊版依序搬進：前 arrived 週都算已搬進 */
+    if (!S.got) { S.got = {}; for (var i = 1; i <= S.arrived; i++) { S.got[i] = S.weekStart; } }
   }
 
   function streak() {
@@ -56,7 +58,9 @@
     while (daysBetween(d, end) >= 0) { if (S.pages[d]) { n++; } d = shift(d, 1); }
     return n;
   }
-  function complete() { return S ? S.arrived >= 12 : false; }
+  function nGot() { return S ? Object.keys(S.got).length : 0; }
+  function got(w) { return S ? !!S.got[w] : false; }
+  function complete() { return nGot() >= 12; }
   function wk() { return S ? Math.min(S.week, 12) : 1; }
 
   function count(txt) {
@@ -70,11 +74,11 @@
 
   function renderStudio() {
     var objs = document.querySelectorAll('.studio .it');
-    var r = S ? S.arrived : 0, cur = S ? S.week : 1;
+    var r = nGot(), cur = wk();
     for (var i = 0; i < objs.length; i++) {
       var w = +objs[i].getAttribute('data-w');
-      objs[i].classList.toggle('on', w <= r);
-      objs[i].classList.toggle('now', w === cur ? !complete() : false);
+      objs[i].classList.toggle('on', got(w));
+      objs[i].classList.toggle('now', w === cur ? !got(w) : false);
       objs[i].classList.toggle('pop', w === popW);
     }
     for (var k = 0; k < objs.length; k++) {
@@ -90,7 +94,7 @@
 
   function renderStats() {
     $('st-week').textContent = S ? fmt(D.ui.week_of, { n: wk() }) : '0/12';
-    $('st-items').textContent = S ? S.arrived : 0;
+    $('st-items').textContent = nGot();
     $('st-streak').textContent = streak();
     $('st-pages').textContent = pageDays();
     $('finale').hidden = !complete();
@@ -137,7 +141,13 @@
   }
 
   function renderWeek() {
-    var n = wk(), w = D.weeks[n - 1], started = !!S, locked = complete();
+    var n = wk(), w = D.weeks[n - 1], started = !!S;
+    var picks = document.querySelectorAll('#wkpick .wkb');
+    for (var p = 0; p < picks.length; p++) {
+      var pw = +picks[p].getAttribute('data-w');
+      picks[p].classList.toggle('got', got(pw));
+      picks[p].setAttribute('aria-pressed', pw === n ? 'true' : 'false');
+    }
     var band = $('week-band');
     band.style.setProperty('--wk', w.color);
     band.style.setProperty('--wk-on', w.on);
@@ -150,7 +160,7 @@
 
     var t = started ? (S.tasks[n] || []) : [];
     var boxes = document.querySelectorAll('#tasks input'), texts = document.querySelectorAll('#tasks .task-text');
-    for (var i = 0; i < boxes.length; i++) { boxes[i].checked = !!t[i]; boxes[i].disabled = locked; texts[i].textContent = w.tasks[i]; }
+    for (var i = 0; i < boxes.length; i++) { boxes[i].checked = !!t[i]; boxes[i].disabled = false; texts[i].textContent = w.tasks[i]; }
 
     var card = started ? S.card[n] : undefined, hasCard = card === undefined ? false : card !== null;
     var dated = started ? !!S.dates[n] : false;
@@ -158,31 +168,27 @@
     /* card 為 -1：自己寫的約會，文字存在 S.own（只在這個瀏覽器） */
     $('datetext').textContent = hasCard ? (card === -1 ? S.own[n] : D.dates[card]) : D.dates[(n * 5) % D.dates.length];
     $('btn-draw').textContent = hasCard ? D.t.btn_redraw : D.t.btn_draw;
-    $('btn-draw').disabled = locked || dated;
-    $('btn-date').disabled = locked || dated || !hasCard;
+    $('btn-draw').disabled = dated;
+    $('btn-date').disabled = dated || !hasCard;
     $('date-ok').hidden = !dated;
-    $('date-own').disabled = locked || dated;
-    $('btn-own').disabled = locked || dated || !$('date-own').value.trim();
+    $('date-own').disabled = dated;
+    $('btn-own').disabled = dated || !$('date-own').value.trim();
 
     var walked = started ? !!S.walks[n] : false, read = started ? !!S.reads[n] : false;
-    $('btn-walk').disabled = locked || walked; $('walk-ok').hidden = !walked;
-    $('btn-read').disabled = locked || read; $('read-ok').hidden = !read;
+    $('btn-walk').disabled = walked; $('walk-ok').hidden = !walked;
+    $('btn-read').disabled = read; $('read-ok').hidden = !read;
 
     var bb = $('btn-bring'), wait = $('wait');
     bb.textContent = fmt(D.ui.bring, { item: w.item });
-    if (!started) { bb.disabled = true; wait.textContent = D.ui.not_started; return; }
-    if (complete()) { bb.disabled = true; wait.textContent = D.ui.finale; return; }
-    var left = 7 - daysBetween(S.weekStart, ymd());
-    if (left > 0) {
-      if (DEBUG) { bb.disabled = false; wait.textContent = ''; }
-      else { bb.disabled = true; wait.textContent = fmt(D.ui.bring_wait, { item: w.item, d: left }); }
-    } else { bb.disabled = false; wait.textContent = ''; }
+    /* 週次自由選：沒搬進的週隨時可以搬 */
+    if (got(n)) { bb.disabled = true; wait.textContent = complete() ? D.ui.finale : fmt(D.ui.got_wait, { item: w.item }); return; }
+    bb.disabled = false; wait.textContent = '';
   }
 
   function renderItems() {
-    var lis = document.querySelectorAll('#items li'), r = S ? S.arrived : 0, cur = S ? S.week : 1;
+    var lis = document.querySelectorAll('#items li'), cur = wk();
     for (var i = 0; i < lis.length; i++) {
-      var w = i + 1, on = w <= r, now = on ? false : (w === cur ? !complete() : false);
+      var w = i + 1, on = got(w), now = on ? false : w === cur;
       lis[i].classList.toggle('on', on);
       lis[i].classList.toggle('now', now);
       lis[i].classList.toggle('later', !on ? !now : false);
@@ -282,14 +288,31 @@
 
     $('btn-bring').addEventListener('click', function () {
       try {
-        var n = S.week, t = S.tasks[n] || [];
+        ensure();
+        var n = wk(), t = S.tasks[n] || [];
+        if (got(n)) { return; }
         var done = t.filter(function (x) { return x; }).length;
         track('studio_week_complete', { level: LVL(n), item_count: weekPageDays(), score: done });
-        S.arrived = n; popW = n;
-        if (n < 12) { S.week = n + 1; S.weekStart = ymd(); }
+        S.got[n] = ymd(); S.arrived = nGot(); popW = n;
+        /* 自動跳到下一個還沒搬進的週 */
+        for (var k = 1; k < 12; k++) {
+          var m = (n - 1 + k) % 12 + 1;
+          if (!got(m)) { S.week = m; S.weekStart = ymd(); break; }
+        }
         save(); render();
         var top = document.querySelector('.frame');
         if (top.scrollIntoView) { top.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      } catch (err) {}
+    });
+
+    $('wkpick').addEventListener('click', function (ev) {
+      try {
+        var b = ev.target.closest('.wkb');
+        if (!b) { return; }
+        ensure();
+        var w = +b.getAttribute('data-w');
+        if (w !== S.week) { S.week = w; S.weekStart = ymd(); save(); }
+        render();
       } catch (err) {}
     });
 

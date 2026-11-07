@@ -313,7 +313,7 @@ def page(lang, preview=False):
          "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ[lang]]},
     ]
 
-    brand_href = "https://study.knittinghiyori.com/" if preview else ("/" if lang == "zh" else "/en/")
+    brand_href = "https://study.knittinghiyori.com/" if preview else "/"
     lang_href = t["lang_href_rel"]
     if preview:
         lang_href = "en/index.html" if lang == "zh" else "../"
